@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -I./include
-DEPS = navigate.h print.h write.h
-OBJ = src/main.o src/navigate.o src/print.o src/write.o
+DEPS = navigate.h print.h write.h utils.h
+OBJ = src/main.o src/navigate.o src/print.o src/write.o src/utils.o
 
 all: todo
 

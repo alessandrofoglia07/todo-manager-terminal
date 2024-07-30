@@ -1,49 +1,48 @@
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "../include/navigate.h"
+#ifdef _WIN32
+#define CLEAN_COMMAND "cls"
+#include <conio.h>
+#else
+#define CLEAN_COMMAND "clear"
+#include <ncurses.h>
+#endif
+
 #include "../include/print.h"
-#include "../include/write.h"
+#include "../include/utils.h"
 
-#define DEFAULT_DATA_PATH "../data"
+#define DEFAULT_DATA_PATH "./data"
 
 int main() {
-    char command;
     char location[255] = DEFAULT_DATA_PATH;
 
-    printf("**** TODO ****\n");
+    char **selectedDir = NULL;
+    int count = 0;
 
-    while (command != 'q') {
-        scanf(" %c", &command);
-        printDirs(location);
-        switch (command) {
-            case 'h':
-            case '?':  // help
-                printCommands();
-                break;
-            case 'c':  // create
-                cre(location);
-                break;
-            case 'd':  // delete
-                del(location);
-                break;
-            case 'e':  // edit
-                edit(location);
-                break;
-            case 'i':  // enter
-                in(location);
-                break;
-            case 'o':  // exit
-                out(location);
-                break;
-            case 'q':  // quit
-                break;
-            default:
-                printf("%c is not a valid command. Enter '?' to display valid commands.\n");
-                break;
-        }
+    bool newTarget = true;
+    char target[260];  // 260 is the default max length for a filename
+
+    system(CLEAN_COMMAND);
+    printf("%s\n**** TODO ****\n%s", "\x1b[34m", "\033[0m");
+    printDir(location, target, &newTarget, &selectedDir, &count);
+    printf("\n");
+    int command = getch();
+    if (switchCommand(command, location, target, &newTarget, &selectedDir, &count) == 1) {
+        return 0;
     }
 
-    printf("Quitting...");
+    while (true) {
+        command = getch();
+        system(CLEAN_COMMAND);
+        printf("%s\n**** TODO ****\n%s", "\x1b[34m", "\033[0m");
+        printDir(location, target, &newTarget, &selectedDir, &count);
+        printf("\n");
+        if (switchCommand(command, location, target, &newTarget, &selectedDir, &count) == 1) {
+            break;
+        }
+    }
 
     return 0;
 }
