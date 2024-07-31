@@ -1,65 +1,72 @@
-#include "../include/utils.h"
+#include <utils.h>
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "../include/navigate.h"
-#include "../include/print.h"
-#include "../include/write.h"
-
-#ifdef _WIN32
-#include <conio.h>
-#else
-#include <ncurses.h>
-#endif
+#include <navigate.h>
+#include <print.h>
+#include <write.h>
 
 /**
- * @return 0 if str is "todo", 1 otherwise
+ * @return 0 if str ends in ".todo", 1 otherwise
 */
 int checkIfTodo(const char *str) {
     const char *todoSuffix = ".todo";
     return strncmp(str + strlen(str) - strlen(todoSuffix), todoSuffix, strlen(todoSuffix));
 }
 
-/**
- * @return 1 if "quit" is selected, otherwise 0
- */
-bool switchCommand(int command, char *location, char *target, bool *newTarget, char ***selectedDir, int *count) {
+int switchCommand(int command, char *location, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount) {
     // special key detect
     if (command == 0 || command == 224) {
         command = getch();
         switch (command) {
             case 72:
-                handleArrowUp(location, target, newTarget, *selectedDir, count);
+                handleArrowUp(location, target, pNewTarget, *pSelectedDir, pCount);
                 break;
             case 80:
-                handleArrowDown(location, target, newTarget, *selectedDir, count);
+                handleArrowDown(location, target, pNewTarget, *pSelectedDir, pCount);
                 break;
             case 75:  // left arrow
-                out(location);
+                out(location, target, pNewTarget);
+                printDir(location, target, pNewTarget, pSelectedDir, pCount);
                 break;
             case 77:  // right arrow
-                in(location, target, newTarget);
-                printDir(location, target, newTarget, selectedDir, count);
+                char temp[sizeof(location) + sizeof(char) + sizeof(target)];
+                strcpy(temp, location);
+                in(location, target, pNewTarget);
+                if (strcmp(temp, location) == 0)
+                    break;
+                printDir(location, target, pNewTarget, pSelectedDir, pCount);
                 break;
         }
     } else if (command == 'h' || command == '?') {
         printCommands();
     } else if (command == 'c') {
-        cre(location);
+        const int result = cre(location, target);
+        if (result == 1) {
+            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printf("The directory has been successfully created.");
+        } else if (result == 2) {
+            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+        }
     } else if (command == 'd') {
         del(location);
     } else if (command == 'e') {
         edit(location);
     } else if (command == 'i') {
-        in(location, target, newTarget);
-        printDir(location, target, newTarget, selectedDir, count);
+        char temp[sizeof(location) + sizeof(char) + sizeof(target)];
+        strcpy(temp, location);
+        in(location, target, pNewTarget);
+        if (strcmp(temp, location) != 0) {
+            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+        }
     } else if (command == 'o') {
-        out(location);
+        out(location, target, pNewTarget);
+        printDir(location, target, pNewTarget, pSelectedDir, pCount);
     } else if (command == 'q') {
         printf("Quitting...");
-        freeSelectedDir(*selectedDir, *count);
+        freeSelectedDir(*pSelectedDir, *pCount);
         return 1;
     } else {
         printf("%c is not a valid command. Enter '?' to display valid commands.\n", command);
