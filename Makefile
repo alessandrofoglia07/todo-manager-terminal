@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -I./include
-DEPS = navigate.h print.h write.h utils.h
+DEPS = navigate.h print.h write.h utils.h defaultDataPath.h
 OBJ = src/main.o src/navigate.o src/print.o src/write.o src/utils.o
 
 all: todo

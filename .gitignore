@@ -2,3 +2,4 @@ data/
 todo.exe
 .idea/
 .vscode/
+src/*.o

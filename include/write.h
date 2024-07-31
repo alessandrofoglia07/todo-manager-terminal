@@ -1,7 +1,7 @@
 #ifndef WRITE_H
 #define WRITE_H
 
-void cre(char *location);
+int cre(char *location, char *target);
 void del(char *location);
 void edit(char *location);
 
