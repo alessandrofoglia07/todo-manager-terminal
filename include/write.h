@@ -1,8 +1,9 @@
 #ifndef WRITE_H
 #define WRITE_H
+#include <stdbool.h>
 
-int cre(char *location, char *target);
-void del(char *location);
+int cre(const char *location, char *target);
+int del(const char *location, const char *target, bool *pNewTarget);
 void edit(char *location);
 
 #endif

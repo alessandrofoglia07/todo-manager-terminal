@@ -49,9 +49,18 @@ int switchCommand(int command, char *location, char *target, bool *pNewTarget, c
             printf("The directory has been successfully created.");
         } else if (result == 2) {
             printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printf("The TODO has been successfully created.");
+        } else if (result == 3) {
+            printDir(location, target, pNewTarget, pSelectedDir, pCount);
         }
     } else if (command == 'd') {
-        del(location);
+        const int result = del(location, target, pNewTarget);
+        if (result == 1) {
+            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printf("Deletion successful.");
+        } else if (result == 2) {
+            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+        }
     } else if (command == 'e') {
         edit(location);
     } else if (command == 'i') {
