@@ -1,13 +1,19 @@
 #include <print.h>
 
-#include <dirent.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <ANSIEscapeCodes.h>
 #include <defaultDataPath.h>
 #include <utils.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dirent.h>
+#endif
 
 void printTodo(const char *location) {
     FILE *pF = fopen(location, "r");
@@ -22,19 +28,52 @@ void printTodo(const char *location) {
     fclose(pF);
 }
 
+void printFileName(const char *entryName, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount, int *pSize) {
+    // Exclude "." and ".."
+    if (!(strcmp(entryName, ".") == 0 || strcmp(entryName, "..") == 0)) {
+        if (*pCount >= *pSize) {
+            *pSize *= 2;
+            *pSelectedDir = (char **)realloc(*pSelectedDir, *pSize * sizeof(char *));
+        }
+
+        (*pSelectedDir)[*pCount] = (char *)malloc((strlen(entryName) + 1) * sizeof(char));
+        strcpy((*pSelectedDir)[*pCount], entryName);
+
+        if (*pNewTarget) {
+            strcpy(target, entryName);
+            if (checkIfTodo(target) == 0) {
+                printf(" %s%s%s\n", ANSI_UNDERLINE, entryName, ANSI_RESET);
+            } else {
+                printf(" %s%s/%s ->\n", ANSI_UNDERLINE, entryName, ANSI_RESET);
+            }
+            *pNewTarget = false;
+        } else {
+            if (strcmp(target, entryName) == 0) {
+                if (checkIfTodo(target) == 0) {
+                    printf(" %s%s%s\n", ANSI_UNDERLINE, entryName, ANSI_RESET);
+                } else {
+                    printf(" %s%s/%s ->\n", ANSI_UNDERLINE, entryName, ANSI_RESET);
+                }
+            } else {
+                if (checkIfTodo(entryName) == 0) {
+                    printf(" %s\n", entryName);
+                } else {
+                    printf(" %s/\n", entryName);
+                }
+            }
+        }
+
+        (*pCount)++;
+    }
+}
+
 void printDir(const char *location, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount) {
-    // ANSI escape code to reset the formatting
-    const char *reset = "\033[0m";
-    // ANSI escape code for cyan text
-    const char *cyan = "\x1b[34m";
-    // ANSI escape code for green text
-    const char *green = "\x1b[32m";
 
     system(CLEAN_COMMAND);
 
-    printf("%s\n**** TODO ****\n%s", cyan, reset);
+    printf("%s\n**** TODO ****\n%s", ANSI_CYAN, ANSI_RESET);
 
-    printf(" %s%s%s\n", green, location + strlen(DEFAULT_DATA_PATH), reset);
+    printf(" %s%s%s\n", ANSI_GREEN, location + strlen(DEFAULT_DATA_PATH), ANSI_RESET);
 
     if (checkIfTodo(location) == 0) {
         printTodo(location);
@@ -42,6 +81,27 @@ void printDir(const char *location, char *target, bool *pNewTarget, char ***pSel
         return;
     }
 
+    int size = 10;
+
+    *pSelectedDir = (char **)malloc(size * sizeof(char *));
+    *pCount = 0;
+
+#ifdef _WIN32
+    char searchPath[MAX_PATH];
+    snprintf(searchPath, MAX_PATH, "%s\\*", location);  // Add wildcard for searching
+
+    WIN32_FIND_DATA findFileData;
+    const HANDLE hFind = FindFirstFile(searchPath, &findFileData);
+
+    if (hFind == INVALID_HANDLE_VALUE) {
+        printf("Error in opening directory at location %s.\n", location);
+        return;
+    }
+
+    do {
+        printFileName(findFileData.cFileName, target, pNewTarget, pSelectedDir, pCount, &size);
+    } while (FindNextFile(hFind, &findFileData) != 0);
+#else
     DIR *dir = NULL;
     struct dirent *entry;
 
@@ -52,56 +112,18 @@ void printDir(const char *location, char *target, bool *pNewTarget, char ***pSel
         return;
     }
 
-    int size = 10;
-    *pSelectedDir = (char **)malloc(size * sizeof(char *));
-    *pCount = 0;
-
     while ((entry = readdir(dir)) != NULL) {
-        if (!(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)) {  // exclude "." and ".."
-            if (*pCount >= size) {
-                size *= 2;
-                *pSelectedDir = (char **)realloc(*pSelectedDir, size * sizeof(char *));
-            }
-
-            (*pSelectedDir)[*pCount] = (char *)malloc((strlen(entry->d_name) + 1) * sizeof(char));
-            strcpy((*pSelectedDir)[*pCount], entry->d_name);
-
-            // ANSI escape code for underlined text
-            const char *underline = "\033[4m";
-
-            if (*pNewTarget) {
-                // Underline the first entry and update the target
-                if (checkIfTodo(target) == 0) {
-                    printf(" %s%s%s\n", underline, entry->d_name, reset);
-                } else {
-                    printf(" %s%s%s ->\n", underline, entry->d_name, reset);
-                }
-                strcpy(target, entry->d_name);
-                *pNewTarget = false;
-            } else {
-                // Check if the entry name matches the target
-                if (strcmp(target, entry->d_name) == 0) {
-                    if (checkIfTodo(target) == 0) {
-                        printf(" %s%s%s\n", underline, entry->d_name, reset);
-                    } else {
-                        printf(" %s%s%s ->\n", underline, entry->d_name, reset);
-                    }
-                } else {
-                    printf(" %s\n", entry->d_name);
-                }
-            }
-
-            (*pCount)++;
-        }
+        printFileName(entry->d_name, target, pNewTarget, pSelectedDir, pCount, &size);
     }
+
+    closedir(dir);
+#endif
 
     if (*pCount == 0) {
         printf("This directory is empty. Enter 'h'/'?' to display possible commands.\n");
     }
 
     printf("\n");
-
-    closedir(dir);
 }
 
 void freeSelectedDir(char **selectedDir, const int count) {
