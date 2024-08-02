@@ -13,11 +13,13 @@
 #ifdef _WIN32
 #include <io.h>
 #include <windows.h>
+#define PATH_FORMAT "%s\\%s"
 #define F_OK 0
 #define access _access
 #else
 #include <dirent.h>
 #include <unistd.h>
+#define PATH_FORMAT "%s/%s"
 #endif
 
 int cre(const char *location, char *target) {
@@ -32,9 +34,7 @@ int cre(const char *location, char *target) {
             printf("Enter directory name:\n");
             scanf("%259s", name);
             char newPath[MAX_PATH_LENGTH];
-            strcpy(newPath, location);
-            strcat(newPath, "/");
-            strcat(newPath, name);
+            snprintf(newPath, MAX_PATH_LENGTH, PATH_FORMAT, location, name);
             if (access(newPath, F_OK) == 0) {
                 printf("The directory %s already exists.", name);
             } else {
@@ -56,10 +56,8 @@ int cre(const char *location, char *target) {
                 break;
             }
             char newPath[MAX_PATH_LENGTH];
-            strcpy(newPath, location);
-            strcat(newPath, "/");
             strcat(name, ".todo");
-            strcat(newPath, name);
+            snprintf(newPath, MAX_PATH_LENGTH, PATH_FORMAT, location, name);
             if (access(newPath, F_OK) == 0) {
                 printf("The TODO %s already exists.", name);
             } else {
@@ -85,36 +83,48 @@ int cre(const char *location, char *target) {
 
 int removeDirectory(const char *path) {
 #ifdef _WIN32
-    char searchPath[MAX_PATH];
-    snprintf(searchPath, MAX_PATH, "%s\\*", path);
+    char searchPath[MAX_PATH_LENGTH];
+    snprintf(searchPath, MAX_PATH_LENGTH, "%s\\*", path);
 
     WIN32_FIND_DATA findFileData;
     const HANDLE hFind = FindFirstFile(searchPath, &findFileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
-        printf("Error in opening directory at location %s.\n", path);
+        printf("Error in opening directory at location %s\n", path);
         return -1;
     }
 
     do {
+        if (strcmp(findFileData.cFileName, ".") == 0 || strcmp(findFileData.cFileName, "..") == 0) {
+            continue;
+        }
         char newPath[MAX_PATH_LENGTH];
-        snprintf(newPath, sizeof(newPath), "%s\\%s", path, findFileData.cFileName);
-        if (checkIfTodo(findFileData.cFileName) == 0) {
-            remove(newPath);
-        } else {
+        snprintf(newPath, MAX_PATH_LENGTH, PATH_FORMAT, path, findFileData.cFileName);
+        if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             if (removeDirectory(newPath) == -1) {
                 return -1;
             }
+        } else {
+            if (DeleteFile(newPath) == 0) {
+                fprintf(stderr, "DeleteFile failed (%lu)\n", GetLastError());
+            }
         }
     } while (FindNextFile(hFind, &findFileData) != 0);
+
+    FindClose(hFind);
+
+    if (RemoveDirectory(path) == 0) {
+        fprintf(stderr, "RemoveDirectory failed (%lu)\n", GetLastError());
+        return -1;
+    }
 #else
     DIR *dir = NULL;
-    struct dirent = *entry;
+    struct dirent *entry;
 
     dir = opendir(location);
 
     if (dir == NULL) {
-        printf("Error in opening directory at location %s.\n", path);
+        perror("opendir");
         return -1;
     }
 
@@ -124,15 +134,25 @@ int removeDirectory(const char *path) {
         }
 
         char newPath[MAX_PATH_LENGTH];
-        snprintf(newPath, sizeof(newPath), "%s/%s", location, entry->d_name);
-        if (checkIfTodo(findFileData.cFileName) == 0) {
-            remove(newPath);
-        } else {
+        snprintf(newPath, MAX_PATH_LENGTH, PATH_FORMAT, path, entry->d_name);
+        if (entry->d_type == DT_DIR) {
             if (removeDirectory(newPath) == -1) {
                 return -1;
             }
+        } else {
+            if (remove(newPath) != 0) {
+                perror("remove");
+            }
         }
     }
+
+    closedir(dir);
+
+    if (rmdir(path) != 0) {
+        perror("rmdir");
+        return -1;
+    }
+
 #endif
     return 0;
 }
@@ -151,19 +171,17 @@ int del(const char *location, const char *target, bool *pNewTarget) {
         c = tolower(c);
 
         if (c == 'y') {
-            char fullPath[strlen(location) + strlen(target) + 1];
-            strcpy(fullPath, location);
-            strcat(fullPath, "/");
-            strcat(fullPath, target);
+            char fullPath[MAX_PATH_LENGTH];
+            snprintf(fullPath, MAX_PATH_LENGTH, PATH_FORMAT, location, target);
 
             if (isTodo == 0) {
                 if (remove(fullPath) != 0) {
-                    perror("Error removing TODO.");
+                    perror("Error removing TODO");
                     return -1;
                 }
             } else {
                 if (removeDirectory(fullPath) != 0) {
-                    perror("Error removing directory.");
+                    perror("Error removing directory");
                     return -1;
                 }
             }
@@ -178,6 +196,44 @@ int del(const char *location, const char *target, bool *pNewTarget) {
 
         printf("%c is not a valid option.\n", c);
     }
+}
+
+int ren(const char *location, char *target) {
+    char fullPath[MAX_PATH_LENGTH];
+    snprintf(fullPath, MAX_PATH_LENGTH, PATH_FORMAT, location, target);
+
+    const int isTodo = checkIfTodo(target) == 0;
+
+    char newName[260];
+
+    while (1) {
+        printf("Enter new name for %s %s:\n", isTodo ? "TODO" : "directory", target);
+        if (fgets(newName, sizeof(newName), stdin) == NULL) {
+            return -1;
+        }
+        newName[strcspn(newName, "\n")] = 0;
+
+        if (strchr(newName, '.') != NULL) {
+            printf("Name cannot contain dots.\n");
+            continue;
+        }
+        break;
+    }
+    if (isTodo) {
+        strncat(newName, ".todo", 260 - strlen(newName) - 1);
+    }
+
+    char newFullPath[MAX_PATH_LENGTH];
+    snprintf(newFullPath, MAX_PATH_LENGTH, PATH_FORMAT, location, newName);
+
+    const int result = rename(fullPath, newFullPath);
+
+    if (result == 0) {
+        strcpy(target, newName);
+        target[MAX_PATH_LENGTH - 1] = '\0';
+    }
+
+    return result;
 }
 
 void edit(char *location) {

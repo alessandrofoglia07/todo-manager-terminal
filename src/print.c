@@ -135,11 +135,12 @@ void freeSelectedDir(char **selectedDir, const int count) {
 
 void printCommands() {
     printf("** COMMANDS **\n");
-    printf("\t'h'/'?' - Display possible commands\n");
-    printf("\t'i'/'Arrow Right' - Navigate into directory/todo\n");
-    printf("\t'o'/'Arrow Left' - Navigate out of directory/todo\n");
-    printf("\t'c' - Create new directory/todo\n");
-    printf("\t'd' - Delete selected directory/todo\n");
-    printf("\t'e' - Edit selected directory/todo\n");
-    printf("\t'q' - Quit\n");
+    printf("  'h'/'?' - Display possible commands\n");
+    printf("  'i'/'Arrow Right' - Navigate into directory/todo\n");
+    printf("  'o'/'Arrow Left' - Navigate out of directory/todo\n");
+    printf("  'c' - Create new directory/todo\n");
+    printf("  'd' - Delete selected directory/todo\n");
+    printf("  'r' - Rename selected directory/todo\n");
+    printf("  'e' - Edit todo\n");
+    printf("  'q' - Quit\n");
 }

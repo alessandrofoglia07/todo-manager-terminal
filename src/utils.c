@@ -61,6 +61,12 @@ int switchCommand(int command, char *location, char *target, bool *pNewTarget, c
         } else if (result == 2) {
             printDir(location, target, pNewTarget, pSelectedDir, pCount);
         }
+    } else if (command == 'r') {
+        if (ren(location, target) == 0) {
+            printf("File renamed successfully.");
+        }
+        printDir(location, target, pNewTarget, pSelectedDir, pCount);
+
     } else if (command == 'e') {
         edit(location);
     } else if (command == 'i') {
