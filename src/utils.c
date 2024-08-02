@@ -63,12 +63,17 @@ int switchCommand(int command, char *location, char *target, bool *pNewTarget, c
         }
     } else if (command == 'r') {
         if (ren(location, target) == 0) {
+            printDir(location, target, pNewTarget, pSelectedDir, pCount);
             printf("File renamed successfully.");
+            return 0;
         }
         printDir(location, target, pNewTarget, pSelectedDir, pCount);
-
     } else if (command == 'e') {
-        edit(location);
+        const int result = edit(location);
+        if (result == 1) {
+            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printf("Cannot use this command while in a directory.");
+        }
     } else if (command == 'i') {
         char temp[sizeof(location) + sizeof(char) + sizeof(target)];
         strcpy(temp, location);

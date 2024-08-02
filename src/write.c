@@ -1,24 +1,28 @@
 #include <write.h>
 
-#include <ANSIEscapeCodes.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <ANSIEscapeCodes.h>
 #include <utils.h>
 
 #define MAX_PATH_LENGTH 1024
+#define BUFFER_SIZE 1024
 
 #ifdef _WIN32
 #include <io.h>
 #include <windows.h>
+#define PATH_DIVIDER '\\'
 #define PATH_FORMAT "%s\\%s"
 #define F_OK 0
 #define access _access
 #else
 #include <dirent.h>
 #include <unistd.h>
+#define PATH_DIVIDER '/'
 #define PATH_FORMAT "%s/%s"
 #endif
 
@@ -30,7 +34,7 @@ int cre(const char *location, char *target) {
         c = tolower(c);
 
         if (c == 'd') {
-            char name[260];
+            char name[FILENAME_MAX];
             printf("Enter directory name:\n");
             scanf("%259s", name);
             char newPath[MAX_PATH_LENGTH];
@@ -45,7 +49,7 @@ int cre(const char *location, char *target) {
         }
 
         if (c == 't') {
-            char name[260];
+            char name[FILENAME_MAX];
             while (1) {
                 printf("Enter TODO name:\n");
                 scanf("%259s", name);
@@ -204,7 +208,7 @@ int ren(const char *location, char *target) {
 
     const int isTodo = checkIfTodo(target) == 0;
 
-    char newName[260];
+    char newName[FILENAME_MAX];
 
     while (1) {
         printf("Enter new name for %s %s:\n", isTodo ? "TODO" : "directory", target);
@@ -220,7 +224,7 @@ int ren(const char *location, char *target) {
         break;
     }
     if (isTodo) {
-        strncat(newName, ".todo", 260 - strlen(newName) - 1);
+        strncat(newName, ".todo", FILENAME_MAX - strlen(newName) - 1);
     }
 
     char newFullPath[MAX_PATH_LENGTH];

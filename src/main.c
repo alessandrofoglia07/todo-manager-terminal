@@ -2,6 +2,7 @@
 
 #include <defaultDataPath.h>
 #include <print.h>
+#include <stdio.h>
 #include <utils.h>
 
 #ifdef _WIN32
@@ -17,7 +18,7 @@ int main() {
     int count = 0;
 
     bool newTarget = true;
-    char target[260];  // 260 is the default max length for a filename
+    char target[FILENAME_MAX];
 
     printDir(location, target, &newTarget, &selectedDir, &count);
     int command = getch();

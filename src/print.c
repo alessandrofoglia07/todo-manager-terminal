@@ -9,6 +9,8 @@
 #include <defaultDataPath.h>
 #include <utils.h>
 
+#define MAX_PATH_LENGTH 1024
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -73,7 +75,18 @@ void printDir(const char *location, char *target, bool *pNewTarget, char ***pSel
 
     printf("%s\n**** TODO ****\n%s", ANSI_CYAN, ANSI_RESET);
 
-    printf(" %s%s%s\n", ANSI_GREEN, location + strlen(DEFAULT_DATA_PATH), ANSI_RESET);
+    char locationToPrint[MAX_PATH_LENGTH];
+    strcpy(locationToPrint, location + strlen(DEFAULT_DATA_PATH));
+
+#ifdef _WIN32
+    // if in windows, replace all "\" (windows default filepath divider) with "/" (more intuitive)
+    char *c;
+    while ((c = strchr(locationToPrint, '\\')) != NULL) {
+        *c = '/';
+    }
+#endif
+
+    printf(" %s%s%s\n", ANSI_GREEN, locationToPrint, ANSI_RESET);
 
     if (checkIfTodo(location) == 0) {
         printTodo(location);

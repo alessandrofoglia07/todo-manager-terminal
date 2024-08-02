@@ -8,10 +8,16 @@
 #include <defaultDataPath.h>
 #include <print.h>
 
+#define PATH_MAX_LENGTH 1024
+
 #ifdef _WIN32
 #define CLEAN_COMMAND "cls"
+#define PATH_FORMAT "%s\\%s"
+#define PATH_DIVIDER '\\'
 #else
 #define CLEAN_COMMAND "clear"
+#define PATH_FORMAT "%s/%s"
+#define PATH_DIVIDER '/'
 #endif
 
 void handleArrowUp(const char *location, char *target, bool *pNewTarget, char **selectedDir, int *pCount) {
@@ -47,28 +53,18 @@ void handleArrowDown(const char *location, char *target, bool *pNewTarget, char 
 void in(char *location, char *target, bool *pNewTarget) {
     if (strlen(target) < 1)
         return;
-    const size_t newSize = strlen(location) + strlen(target) + 2;
-    char *temp = (char *)malloc(newSize);
-    if (temp == NULL) {
-        fprintf(stderr, "Memory allocation failed.\n");
-        exit(1);
-    }
-    strcpy(temp, location);
-    strcat(temp, "/");
-    strcat(temp, target);
-    strcpy(location, temp);
+    snprintf(location, PATH_MAX_LENGTH, PATH_FORMAT, location, target);
     strcpy(target, "");
     *pNewTarget = true;
-    free(temp);
 }
 
 void out(const char *location, char *target, bool *pNewTarget) {
     if (strlen(location) - strlen(DEFAULT_DATA_PATH) == 0)
         return;
-    char *lastBackslash = strrchr(location, '/');
-    if (lastBackslash != NULL) {
-        strcpy(target, lastBackslash + 1);
-        *lastBackslash = '\0';
+    char *lastDivider = strrchr(location, PATH_DIVIDER);
+    if (lastDivider != NULL) {
+        strcpy(target, lastDivider + 1);
+        *lastDivider = '\0';
         *pNewTarget = false;
     }
 }
