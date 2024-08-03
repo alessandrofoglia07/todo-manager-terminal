@@ -7,23 +7,17 @@
 #include <string.h>
 
 #include <ANSIEscapeCodes.h>
+#include <pathFormats.h>
 #include <utils.h>
-
-#define MAX_PATH_LENGTH 1024
-#define BUFFER_SIZE 1024
 
 #ifdef _WIN32
 #include <io.h>
 #include <windows.h>
-#define PATH_DIVIDER '\\'
-#define PATH_FORMAT "%s\\%s"
 #define F_OK 0
 #define access _access
 #else
 #include <dirent.h>
 #include <unistd.h>
-#define PATH_DIVIDER '/'
-#define PATH_FORMAT "%s/%s"
 #endif
 
 int cre(const char *location, char *target) {
@@ -240,5 +234,43 @@ int ren(const char *location, char *target) {
     return result;
 }
 
-void edit(char *location) {
+// TODO
+int edit(const char *location) {
+    char *filename = strrchr(location, PATH_DIVIDER);
+#ifdef _WIN32
+    char *c;
+    while ((c = strchr(filename, '\\')) != NULL) {
+        *c = '/';
+    }
+#endif
+    if (checkIfTodo(location) != 0) {
+        return 1;
+    }
+
+    FILE *pF = fopen(location, "r");
+    if (pF == NULL) {
+        perror("Error opening file");
+        return -1;
+    }
+
+    char *buf = (char *)malloc(BUFFER_SIZE);
+    if (buf == NULL) {
+        perror("Memory allocation error");
+        fclose(pF);
+        return -1;
+    }
+
+    const size_t bytesRead = fread(buf, 1, BUFFER_SIZE - 1, pF);
+    buf[bytesRead] = '\0';
+
+    system(CLEAN_COMMAND);
+    printf("%s\n**** TODO ****\n%s", ANSI_CYAN, ANSI_RESET);
+    printf("%s-- EDIT MODE --\n%s%s%s\n", ANSI_GREEN, filename, buf, ANSI_RESET);
+
+    char input[BUFFER_SIZE];
+
+    scanf("%s%s", buf, input);
+
+    fclose(pF);
+    return 0;
 }

@@ -2,23 +2,11 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <defaultDataPath.h>
+#include <pathFormats.h>
 #include <print.h>
-
-#define PATH_MAX_LENGTH 1024
-
-#ifdef _WIN32
-#define CLEAN_COMMAND "cls"
-#define PATH_FORMAT "%s\\%s"
-#define PATH_DIVIDER '\\'
-#else
-#define CLEAN_COMMAND "clear"
-#define PATH_FORMAT "%s/%s"
-#define PATH_DIVIDER '/'
-#endif
 
 void handleArrowUp(const char *location, char *target, bool *pNewTarget, char **selectedDir, int *pCount) {
     for (int i = 0; i < *pCount; i++) {

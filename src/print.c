@@ -9,8 +9,6 @@
 #include <defaultDataPath.h>
 #include <utils.h>
 
-#define MAX_PATH_LENGTH 1024
-
 #ifdef _WIN32
 #include <windows.h>
 #else
