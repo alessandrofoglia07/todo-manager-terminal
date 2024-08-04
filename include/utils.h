@@ -10,8 +10,8 @@
 
 #include <stdbool.h>
 
+void replaceLineInFile(const char *filename, char *oldLine, char *newLine);
 int checkIfTodo(const char *str);
-
 int switchCommand(int command, char *location, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount);
 
 #endif  //UTILS_H

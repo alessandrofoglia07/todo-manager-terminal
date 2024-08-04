@@ -6,7 +6,74 @@
 
 #include <navigate.h>
 #include <print.h>
+#include <stdlib.h>
+#include <windows.h>
 #include <write.h>
+
+void replaceLineInFile(const char *filename, char *oldLine, char *newLine) {
+
+    oldLine[strcspn(oldLine, "\n")] = '\0';
+
+    if (newLine[0] == '\n') {
+        newLine++;
+    }
+    newLine[strcspn(newLine, "\n")] = 0;
+
+    FILE *pF = fopen(filename, "r");
+    if (pF == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    FILE *tmpFile = NULL;
+
+#ifdef _WIN32
+    const char tempFilename[] = "tempfile.txt";
+    tmpFile = fopen(tempFilename, "w+");
+#else
+    tmpFile = tmpfile();
+#endif
+
+    if (tmpFile == NULL) {
+        perror("Error creating temporary file");
+        fclose(pF);
+        return;
+    }
+
+    char buf[BUFFER_SIZE];
+
+    while (fgets(buf, BUFFER_SIZE, pF) != NULL) {
+        buf[strcspn(buf, "\n")] = '\0';
+
+        if (strcmp(buf, oldLine) == 0) {
+            fprintf(tmpFile, "%s\n", newLine);
+        } else {
+            fprintf(tmpFile, "%s\n", buf);
+        }
+    }
+
+    fclose(pF);
+
+    pF = fopen(filename, "w");
+    if (pF == NULL) {
+        perror("Error opening file for writing");
+        fclose(tmpFile);
+        return;
+    }
+
+    rewind(tmpFile);
+
+    int c;
+    while ((c = fgetc(tmpFile)) != EOF) {
+        fputc(c, pF);
+    }
+
+    fclose(tmpFile);
+    fclose(pF);
+#ifdef _WIN32
+    DeleteFile(tempFilename);
+#endif
+}
 
 /**
  * @return 0 if str ends in ".todo", 1 otherwise
@@ -32,6 +99,9 @@ int switchCommand(int command, char *location, char *target, bool *pNewTarget, c
                 printDir(location, target, pNewTarget, pSelectedDir, pCount);
                 break;
             case 77:  // right arrow
+                if (checkIfTodo(location) == 0) {
+                    break;
+                }
                 char temp[sizeof(location) + sizeof(char) + sizeof(target)];
                 strcpy(temp, location);
                 in(location, target, pNewTarget);
@@ -62,6 +132,9 @@ int switchCommand(int command, char *location, char *target, bool *pNewTarget, c
             printDir(location, target, pNewTarget, pSelectedDir, pCount);
         }
     } else if (command == 'r') {
+        if (checkIfTodo(location) == 0) {
+            return 0;
+        }
         if (ren(location, target) == 0) {
             printDir(location, target, pNewTarget, pSelectedDir, pCount);
             printf("File renamed successfully.");
@@ -69,12 +142,18 @@ int switchCommand(int command, char *location, char *target, bool *pNewTarget, c
         }
         printDir(location, target, pNewTarget, pSelectedDir, pCount);
     } else if (command == 'e') {
-        const int result = edit(location);
-        if (result == 1) {
+        const int result = edit(location, target);
+        if (result == 0) {
+            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printf("TODO edited successfully.");
+        } else if (result == 1) {
             printDir(location, target, pNewTarget, pSelectedDir, pCount);
             printf("Cannot use this command while in a directory.");
         }
     } else if (command == 'i') {
+        if (checkIfTodo(location) == 0) {
+            return 0;
+        }
         char temp[sizeof(location) + sizeof(char) + sizeof(target)];
         strcpy(temp, location);
         in(location, target, pNewTarget);
@@ -88,8 +167,6 @@ int switchCommand(int command, char *location, char *target, bool *pNewTarget, c
         printf("Quitting...");
         freeSelectedDir(*pSelectedDir, *pCount);
         return 1;
-    } else {
-        printf("%c is not a valid command. Enter '?' to display valid commands.\n", command);
-    }
+    };
     return 0;
 }
