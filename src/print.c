@@ -15,17 +15,28 @@
 #include <dirent.h>
 #endif
 
-void printTodo(const char *location) {
-    FILE *pF = fopen(location, "r");
-    if (pF == NULL) {
-        printf("Error in opening todo at location %s. \n", location);
-        return;
+void printLine(const char *line, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount, int *pSize) {
+    if (*pCount >= *pSize) {
+        *pSize *= 2;
+        *pSelectedDir = (char **)realloc(*pSelectedDir, *pSize * sizeof(char *));
     }
-    char buffer[255];
-    while (fgets(buffer, 255, pF)) {
-        printf(" %s", buffer);
+
+    (*pSelectedDir)[*pCount] = (char *)malloc((strlen(line) + 1) * sizeof(char));
+    strcpy((*pSelectedDir)[*pCount], line);
+
+    if (*pNewTarget) {
+        strcpy(target, line);
+        printf(" - %s%s%s", ANSI_UNDERLINE, line, ANSI_RESET);
+        *pNewTarget = false;
+    } else {
+        if (strcmp(target, line) == 0) {
+            printf(" - %s%s%s", ANSI_UNDERLINE, line, ANSI_RESET);
+        } else {
+            printf(" - %s", line);
+        }
     }
-    fclose(pF);
+
+    (*pCount)++;
 }
 
 void printFileName(const char *entryName, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount, int *pSize) {
@@ -86,16 +97,24 @@ void printDir(const char *location, char *target, bool *pNewTarget, char ***pSel
 
     printf(" %s%s%s\n", ANSI_GREEN, locationToPrint, ANSI_RESET);
 
-    if (checkIfTodo(location) == 0) {
-        printTodo(location);
-        printf("\n");
-        return;
-    }
-
     int size = 10;
-
     *pSelectedDir = (char **)malloc(size * sizeof(char *));
     *pCount = 0;
+
+    if (checkIfTodo(location) == 0) {
+        FILE *pF = fopen(location, "r");
+        if (pF == NULL) {
+            printf("Error in opening todo at location %s. \n", location);
+            return;
+        }
+        char buffer[BUFFER_SIZE];
+        while (fgets(buffer, BUFFER_SIZE, pF) != NULL) {
+            printLine(buffer, target, pNewTarget, pSelectedDir, pCount, &size);
+        }
+        fclose(pF);
+        printf("\n\n");
+        return;
+    }
 
 #ifdef _WIN32
     char searchPath[MAX_PATH];
@@ -152,6 +171,6 @@ void printCommands() {
     printf("  'c' - Create new directory/todo\n");
     printf("  'd' - Delete selected directory/todo\n");
     printf("  'r' - Rename selected directory/todo\n");
-    printf("  'e' - Edit todo\n");
+    printf("  'e' - Edit todo line\n");
     printf("  'q' - Quit\n");
 }

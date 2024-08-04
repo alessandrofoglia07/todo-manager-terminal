@@ -1,8 +1,8 @@
 #include <stdbool.h>
+#include <stdio.h>
 
 #include <defaultDataPath.h>
 #include <print.h>
-#include <stdio.h>
 #include <utils.h>
 
 #ifdef _WIN32
@@ -12,7 +12,7 @@
 #endif
 
 int main() {
-    char location[255] = DEFAULT_DATA_PATH;
+    char location[MAX_PATH_LENGTH] = DEFAULT_DATA_PATH;
 
     char **selectedDir = NULL;
     int count = 0;

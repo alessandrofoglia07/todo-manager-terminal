@@ -7,6 +7,7 @@
 #include <defaultDataPath.h>
 #include <pathFormats.h>
 #include <print.h>
+#include <utils.h>
 
 void handleArrowUp(const char *location, char *target, bool *pNewTarget, char **selectedDir, int *pCount) {
     for (int i = 0; i < *pCount; i++) {
@@ -39,7 +40,7 @@ void handleArrowDown(const char *location, char *target, bool *pNewTarget, char 
 }
 
 void in(char *location, char *target, bool *pNewTarget) {
-    if (strlen(target) < 1)
+    if (checkIfTodo(location) == 0)
         return;
     snprintf(location, PATH_MAX_LENGTH, PATH_FORMAT, location, target);
     strcpy(target, "");

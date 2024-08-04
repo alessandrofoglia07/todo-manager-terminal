@@ -2,6 +2,7 @@
 #define PRINT_H
 
 #define MAX_PATH_LENGTH 1024
+#define BUFFER_SIZE 1024
 
 #include <stdbool.h>
 
