@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -I./include
 LDFLAGS = -lreadline
-DEPS = navigate.h print.h write.h utils.h defaultDataPath.h ANSIEscapeCodes.h pathFormats.h
-OBJ = src/main.o src/navigate.o src/print.o src/write.o src/utils.o
+DEPS = navigate.h print.h write.h utils.h ANSIEscapeCodes.h globals.h
+OBJ = src/main.o src/navigate.o src/print.o src/write.o src/utils.o src/globals.c
 
 all: todo
 

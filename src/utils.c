@@ -1,13 +1,13 @@
 #include <utils.h>
 
-#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
+#include <globals.h>
 #include <navigate.h>
 #include <print.h>
-#include <stdlib.h>
-#include <windows.h>
 #include <write.h>
 
 void replaceLineInFile(const char *filename, char *oldLine, char *newLine) {
@@ -83,20 +83,22 @@ int checkIfTodo(const char *str) {
     return strncmp(str + strlen(str) - strlen(todoSuffix), todoSuffix, strlen(todoSuffix));
 }
 
-int switchCommand(int command, char *location, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount) {
+int switchCommand(int command) {
     // special key detect
     if (command == 0 || command == 224) {
         command = getch();
         switch (command) {
             case 72:
-                handleArrowUp(location, target, pNewTarget, *pSelectedDir, pCount);
+                handleArrowUp();
+                printDir();
                 break;
             case 80:
-                handleArrowDown(location, target, pNewTarget, *pSelectedDir, pCount);
+                handleArrowDown();
+                printDir();
                 break;
             case 75:  // left arrow
-                out(location, target, pNewTarget);
-                printDir(location, target, pNewTarget, pSelectedDir, pCount);
+                out();
+                printDir();
                 break;
             case 77:  // right arrow
                 if (checkIfTodo(location) == 0) {
@@ -104,68 +106,71 @@ int switchCommand(int command, char *location, char *target, bool *pNewTarget, c
                 }
                 char temp[sizeof(location) + sizeof(char) + sizeof(target)];
                 strcpy(temp, location);
-                in(location, target, pNewTarget);
+                in();
                 if (strcmp(temp, location) == 0)
                     break;
-                printDir(location, target, pNewTarget, pSelectedDir, pCount);
+                printDir();
                 break;
         }
     } else if (command == 'h' || command == '?') {
         printCommands();
     } else if (command == 'c') {
-        const int result = cre(location, target);
+        const int result = cre();
         if (result == 1) {
-            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printDir();
             printf("The directory has been successfully created.");
         } else if (result == 2) {
-            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printDir();
             printf("The TODO has been successfully created.");
         } else if (result == 3) {
-            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printDir();
         }
     } else if (command == 'd') {
-        const int result = del(location, target, pNewTarget);
+        const int result = del();
         if (result == 1) {
-            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printDir();
             printf("Deletion successful.");
         } else if (result == 2) {
-            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printDir();
         }
     } else if (command == 'r') {
         if (checkIfTodo(location) == 0) {
             return 0;
         }
-        if (ren(location, target) == 0) {
-            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+        if (ren() == 0) {
+            printDir();
             printf("File renamed successfully.");
             return 0;
         }
-        printDir(location, target, pNewTarget, pSelectedDir, pCount);
+        printDir();
     } else if (command == 'e') {
-        const int result = edit(location, target);
+        const int result = edit();
         if (result == 0) {
-            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printDir();
             printf("TODO edited successfully.");
         } else if (result == 1) {
-            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printDir();
             printf("Cannot use this command while in a directory.");
         }
     } else if (command == 'i') {
         if (checkIfTodo(location) == 0) {
             return 0;
         }
-        char temp[sizeof(location) + sizeof(char) + sizeof(target)];
+        char temp[strlen(location) + strlen(target) + 1];
         strcpy(temp, location);
-        in(location, target, pNewTarget);
+        in();
         if (strcmp(temp, location) != 0) {
-            printDir(location, target, pNewTarget, pSelectedDir, pCount);
+            printDir();
         }
     } else if (command == 'o') {
-        out(location, target, pNewTarget);
-        printDir(location, target, pNewTarget, pSelectedDir, pCount);
+        out();
+        printDir();
     } else if (command == 'q') {
         printf("Quitting...");
-        freeSelectedDir(*pSelectedDir, *pCount);
+        for (int i = 0; i < count; i++) {
+            free(selectedDir[i]);
+        }
+        free(selectedDir);
         return 1;
     };
     return 0;

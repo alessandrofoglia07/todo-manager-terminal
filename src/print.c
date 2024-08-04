@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include <ANSIEscapeCodes.h>
-#include <defaultDataPath.h>
+#include <globals.h>
 #include <utils.h>
 
 #ifdef _WIN32
@@ -15,19 +15,19 @@
 #include <dirent.h>
 #endif
 
-void printLine(const char *line, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount, int *pSize) {
-    if (*pCount >= *pSize) {
+void printLine(const char *line, int *pSize) {
+    if (count >= *pSize) {
         *pSize *= 2;
-        *pSelectedDir = (char **)realloc(*pSelectedDir, *pSize * sizeof(char *));
+        selectedDir = (char **)realloc(selectedDir, *pSize * sizeof(char *));
     }
 
-    (*pSelectedDir)[*pCount] = (char *)malloc((strlen(line) + 1) * sizeof(char));
-    strcpy((*pSelectedDir)[*pCount], line);
+    selectedDir[count] = (char *)malloc((strlen(line) + 1) * sizeof(char));
+    strcpy(selectedDir[count], line);
 
-    if (*pNewTarget) {
+    if (newTarget) {
         strcpy(target, line);
         printf(" - %s%s%s", ANSI_UNDERLINE, line, ANSI_RESET);
-        *pNewTarget = false;
+        newTarget = false;
     } else {
         if (strcmp(target, line) == 0) {
             printf(" - %s%s%s", ANSI_UNDERLINE, line, ANSI_RESET);
@@ -36,28 +36,28 @@ void printLine(const char *line, char *target, bool *pNewTarget, char ***pSelect
         }
     }
 
-    (*pCount)++;
+    count++;
 }
 
-void printFileName(const char *entryName, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount, int *pSize) {
+void printFileName(const char *entryName, int *pSize) {
     // Exclude "." and ".."
     if (!(strcmp(entryName, ".") == 0 || strcmp(entryName, "..") == 0)) {
-        if (*pCount >= *pSize) {
+        if (count >= *pSize) {
             *pSize *= 2;
-            *pSelectedDir = (char **)realloc(*pSelectedDir, *pSize * sizeof(char *));
+            selectedDir = (char **)realloc(selectedDir, *pSize * sizeof(char *));
         }
 
-        (*pSelectedDir)[*pCount] = (char *)malloc((strlen(entryName) + 1) * sizeof(char));
-        strcpy((*pSelectedDir)[*pCount], entryName);
+        (selectedDir)[count] = (char *)malloc((strlen(entryName) + 1) * sizeof(char));
+        strcpy((selectedDir)[count], entryName);
 
-        if (*pNewTarget) {
+        if (newTarget) {
             strcpy(target, entryName);
             if (checkIfTodo(target) == 0) {
                 printf(" %s%s%s\n", ANSI_UNDERLINE, entryName, ANSI_RESET);
             } else {
                 printf(" %s%s/%s ->\n", ANSI_UNDERLINE, entryName, ANSI_RESET);
             }
-            *pNewTarget = false;
+            newTarget = false;
         } else {
             if (strcmp(target, entryName) == 0) {
                 if (checkIfTodo(target) == 0) {
@@ -74,12 +74,11 @@ void printFileName(const char *entryName, char *target, bool *pNewTarget, char *
             }
         }
 
-        (*pCount)++;
+        count++;
     }
 }
 
-void printDir(const char *location, char *target, bool *pNewTarget, char ***pSelectedDir, int *pCount) {
-
+void printDir() {
     system(CLEAN_COMMAND);
 
     printf("%s\n**** TODO ****\n%s", ANSI_CYAN, ANSI_RESET);
@@ -98,8 +97,8 @@ void printDir(const char *location, char *target, bool *pNewTarget, char ***pSel
     printf(" %s%s%s\n", ANSI_GREEN, locationToPrint, ANSI_RESET);
 
     int size = 10;
-    *pSelectedDir = (char **)malloc(size * sizeof(char *));
-    *pCount = 0;
+    selectedDir = (char **)malloc(size * sizeof(char *));
+    count = 0;
 
     if (checkIfTodo(location) == 0) {
         FILE *pF = fopen(location, "r");
@@ -109,7 +108,7 @@ void printDir(const char *location, char *target, bool *pNewTarget, char ***pSel
         }
         char buffer[BUFFER_SIZE];
         while (fgets(buffer, BUFFER_SIZE, pF) != NULL) {
-            printLine(buffer, target, pNewTarget, pSelectedDir, pCount, &size);
+            printLine(buffer, &size);
         }
         fclose(pF);
         printf("\n\n");
@@ -129,7 +128,7 @@ void printDir(const char *location, char *target, bool *pNewTarget, char ***pSel
     }
 
     do {
-        printFileName(findFileData.cFileName, target, pNewTarget, pSelectedDir, pCount, &size);
+        printFileName(findFileData.cFileName, &size);
     } while (FindNextFile(hFind, &findFileData) != 0);
 #else
     DIR *dir = NULL;
@@ -143,24 +142,17 @@ void printDir(const char *location, char *target, bool *pNewTarget, char ***pSel
     }
 
     while ((entry = readdir(dir)) != NULL) {
-        printFileName(entry->d_name, target, pNewTarget, pSelectedDir, pCount, &size);
+        printFileName(entry->d_name, &size);
     }
 
     closedir(dir);
 #endif
 
-    if (*pCount == 0) {
+    if (count == 0) {
         printf("This directory is empty. Enter 'h'/'?' to display possible commands.\n");
     }
 
     printf("\n");
-}
-
-void freeSelectedDir(char **selectedDir, const int count) {
-    for (int i = 0; i < count; i++) {
-        free(selectedDir[i]);
-    }
-    free(selectedDir);
 }
 
 void printCommands() {

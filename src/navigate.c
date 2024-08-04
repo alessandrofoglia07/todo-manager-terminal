@@ -4,56 +4,52 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <defaultDataPath.h>
-#include <pathFormats.h>
-#include <print.h>
+#include <globals.h>
 #include <utils.h>
 
-void handleArrowUp(const char *location, char *target, bool *pNewTarget, char **selectedDir, int *pCount) {
-    for (int i = 0; i < *pCount; i++) {
+void handleArrowUp() {
+    for (int i = 0; i < count; i++) {
         if (strcmp(selectedDir[i], target) == 0) {
             if (i > 0) {
                 strcpy(target, selectedDir[i - 1]);
             } else {
-                strcpy(target, selectedDir[*pCount - 1]);
+                strcpy(target, selectedDir[count - 1]);
             }
-            *pNewTarget = false;
+            newTarget = false;
             break;
         }
     }
-    printDir(location, target, pNewTarget, &selectedDir, pCount);
 }
 
-void handleArrowDown(const char *location, char *target, bool *pNewTarget, char **selectedDir, int *pCount) {
-    for (int i = 0; i < *pCount; i++) {
+void handleArrowDown() {
+    for (int i = 0; i < count; i++) {
         if (strcmp(selectedDir[i], target) == 0) {
-            if (i + 1 < *pCount) {
+            if (i + 1 < count) {
                 strcpy(target, selectedDir[i + 1]);
             } else {
                 strcpy(target, selectedDir[0]);
             }
-            *pNewTarget = false;
+            newTarget = false;
             break;
         }
     }
-    printDir(location, target, pNewTarget, &selectedDir, pCount);
 }
 
-void in(char *location, char *target, bool *pNewTarget) {
+void in() {
     if (checkIfTodo(location) == 0)
         return;
-    snprintf(location, PATH_MAX_LENGTH, PATH_FORMAT, location, target);
+    snprintf(location, MAX_PATH_LENGTH, PATH_FORMAT, location, target);
     strcpy(target, "");
-    *pNewTarget = true;
+    newTarget = true;
 }
 
-void out(const char *location, char *target, bool *pNewTarget) {
+void out() {
     if (strlen(location) - strlen(DEFAULT_DATA_PATH) == 0)
         return;
     char *lastDivider = strrchr(location, PATH_DIVIDER);
     if (lastDivider != NULL) {
         strcpy(target, lastDivider + 1);
         *lastDivider = '\0';
-        *pNewTarget = false;
+        newTarget = false;
     }
 }

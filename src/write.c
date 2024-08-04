@@ -10,7 +10,7 @@
 #include <readline/readline.h>
 
 #include <ANSIEscapeCodes.h>
-#include <pathFormats.h>
+#include <globals.h>
 #include <utils.h>
 
 #ifdef _WIN32
@@ -25,7 +25,7 @@
 
 char DEFAULT_TEXT[MAX_PATH_LENGTH];
 
-int cre(const char *location, char *target) {
+int cre() {
     while (1) {
         printf("Do you want to create a %sD%sirectory or a %sT%sodo? (enter 'e' to exit)\n", ANSI_UNDERLINE, ANSI_RESET, ANSI_UNDERLINE, ANSI_RESET);
         char c;
@@ -159,7 +159,7 @@ int removeDirectory(const char *path) {
     return 0;
 }
 
-int del(const char *location, const char *target, bool *pNewTarget) {
+int del() {
     char c;
     const int isTodo = checkIfTodo(target);
     while (1) {
@@ -188,7 +188,7 @@ int del(const char *location, const char *target, bool *pNewTarget) {
                 }
             }
 
-            *pNewTarget = true;
+            newTarget = true;
             return 1;
         }
 
@@ -200,7 +200,7 @@ int del(const char *location, const char *target, bool *pNewTarget) {
     }
 }
 
-int ren(const char *location, char *target) {
+int ren() {
     char fullPath[MAX_PATH_LENGTH];
     snprintf(fullPath, MAX_PATH_LENGTH, PATH_FORMAT, location, target);
 
@@ -232,7 +232,7 @@ int ren(const char *location, char *target) {
 
     if (result == 0) {
         strcpy(target, newName);
-        target[MAX_PATH_LENGTH - 1] = '\0';
+        target[FILENAME_MAX - 1] = '\0';
     }
 
     return result;
@@ -243,7 +243,7 @@ int prefill() {
     return 0;
 }
 
-int edit(const char *location, char *target) {
+int edit() {
     if (checkIfTodo(location) != 0) {
         return 1;
     }
