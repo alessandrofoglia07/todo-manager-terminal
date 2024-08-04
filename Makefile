@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -I./include
+LDFLAGS = -lreadline
 DEPS = navigate.h print.h write.h utils.h defaultDataPath.h ANSIEscapeCodes.h pathFormats.h
 OBJ = src/main.o src/navigate.o src/print.o src/write.o src/utils.o
 
@@ -14,7 +15,7 @@ all: todo
 todo: $(OBJ)
 # $@ means the target file (e.g. "todo")
 # $^ means all the prerequisites (e.g. "src/main.o")
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 	del src\*.o
 
 clean:

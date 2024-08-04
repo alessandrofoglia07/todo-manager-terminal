@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <readline/history.h>
+#include <readline/readline.h>
+
 #include <ANSIEscapeCodes.h>
 #include <pathFormats.h>
 #include <utils.h>
@@ -19,6 +22,8 @@
 #include <dirent.h>
 #include <unistd.h>
 #endif
+
+char DEFAULT_TEXT[MAX_PATH_LENGTH];
 
 int cre(const char *location, char *target) {
     while (1) {
@@ -63,7 +68,6 @@ int cre(const char *location, char *target) {
                 pF = fopen(newPath, "w");
                 if (pF == NULL) {
                     printf("Error occurred while creating the TODO.");
-                    free(newPath);
                     return -1;
                 }
                 strcpy(target, name);
@@ -234,43 +238,52 @@ int ren(const char *location, char *target) {
     return result;
 }
 
-// TODO
-int edit(const char *location) {
-    char *filename = strrchr(location, PATH_DIVIDER);
+int prefill() {
+    rl_insert_text(DEFAULT_TEXT);
+    return 0;
+}
+
+int edit(const char *location, char *target) {
+    if (checkIfTodo(location) != 0) {
+        return 1;
+    }
+    char newLocation[MAX_PATH_LENGTH];
+    strcpy(newLocation, location);
+
+    char *filename = strrchr(newLocation, PATH_DIVIDER);
+
 #ifdef _WIN32
     char *c;
     while ((c = strchr(filename, '\\')) != NULL) {
         *c = '/';
     }
 #endif
-    if (checkIfTodo(location) != 0) {
-        return 1;
-    }
-
-    FILE *pF = fopen(location, "r");
-    if (pF == NULL) {
-        perror("Error opening file");
-        return -1;
-    }
-
-    char *buf = (char *)malloc(BUFFER_SIZE);
-    if (buf == NULL) {
-        perror("Memory allocation error");
-        fclose(pF);
-        return -1;
-    }
-
-    const size_t bytesRead = fread(buf, 1, BUFFER_SIZE - 1, pF);
-    buf[bytesRead] = '\0';
 
     system(CLEAN_COMMAND);
     printf("%s\n**** TODO ****\n%s", ANSI_CYAN, ANSI_RESET);
-    printf("%s-- EDIT MODE --\n%s%s%s\n", ANSI_GREEN, filename, buf, ANSI_RESET);
+    printf("%s%s\t-- EDIT MODE\n%s\n", ANSI_GREEN, filename, ANSI_RESET);
 
-    char input[BUFFER_SIZE];
+    strcpy(DEFAULT_TEXT, target);
+    if (DEFAULT_TEXT[strlen(DEFAULT_TEXT) - 1] == '\n') {
+        DEFAULT_TEXT[strlen(DEFAULT_TEXT) - 1] = '\0';
+    }
 
-    scanf("%s%s", buf, input);
+    rl_startup_hook = prefill;
+    char *buf = readline(" ");
+    char bufCopy[strlen(buf) + 1];
 
-    fclose(pF);
+    strcpy(bufCopy, buf);
+
+    // Remove newline character from the end if present
+    buf[strcspn(buf, "\n")] = '\0';
+
+    replaceLineInFile(location, target, buf);
+
+    if (bufCopy[strlen(bufCopy) - 1] != '\n') {
+        strcat(bufCopy, "\n");
+    }
+    strcpy(target, bufCopy);
+
+    free(buf);
     return 0;
 }
