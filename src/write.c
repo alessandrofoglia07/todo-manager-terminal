@@ -26,60 +26,93 @@
 char DEFAULT_TEXT[MAX_PATH_LENGTH];
 
 int cre() {
+    const short inTodo = checkIfTodo(location) == 0;
     while (1) {
-        printf("Do you want to create a %sD%sirectory or a %sT%sodo? (enter 'e' to exit)\n", ANSI_UNDERLINE, ANSI_RESET, ANSI_UNDERLINE, ANSI_RESET);
-        char c;
-        scanf(" %c", &c);
-        c = tolower(c);
+        if (inTodo) {
+            printf("Do you want to create a new line? (y/N)\n");
+            char c;
+            scanf(" %c", &c);
+            c = tolower(c);
 
-        if (c == 'd') {
-            char name[FILENAME_MAX];
-            printf("Enter directory name:\n");
-            scanf("%259s", name);
-            char newPath[MAX_PATH_LENGTH];
-            snprintf(newPath, MAX_PATH_LENGTH, PATH_FORMAT, location, name);
-            if (access(newPath, F_OK) == 0) {
-                printf("The directory %s already exists.", name);
-            } else {
-                mkdir(newPath);
-                strcpy(target, name);
-            }
-            return 1;
-        }
-
-        if (c == 't') {
-            char name[FILENAME_MAX];
-            while (1) {
-                printf("Enter TODO name:\n");
-                scanf("%259s", name);
-                if (strchr(name, '.') != NULL) {
-                    printf("Name cannot contain dots.\n");
-                    continue;
+            if (c == 'y') {
+                char line[BUFFER_SIZE];
+                while (1) {
+                    printf("Enter new line:\n");
+                    scanf("%1022s", line);
+                    if (strlen(line) > 0) {
+                        break;
+                    }
                 }
-                break;
-            }
-            char newPath[MAX_PATH_LENGTH];
-            strcat(name, ".todo");
-            snprintf(newPath, MAX_PATH_LENGTH, PATH_FORMAT, location, name);
-            if (access(newPath, F_OK) == 0) {
-                printf("The TODO %s already exists.", name);
-            } else {
-                const FILE *pF = NULL;
-                pF = fopen(newPath, "w");
+                FILE *pF = fopen(location, "a");
                 if (pF == NULL) {
-                    printf("Error occurred while creating the TODO.");
                     return -1;
                 }
-                strcpy(target, name);
+                strcat(line, "\n");
+                if (fputs(line, pF) == EOF) {
+                    fclose(pF);
+                    return -1;
+                }
+                strcpy(target, line);
+                fclose(pF);
+                return 1;
             }
-            return 2;
-        }
+            if (c == 'n' || c == 'e') {
+                return 4;
+            }
+        } else {
+            printf("Do you want to create a %sD%sirectory or a %sT%sodo? (enter 'e' to exit)\n", ANSI_UNDERLINE, ANSI_RESET, ANSI_UNDERLINE, ANSI_RESET);
+            char c;
+            scanf(" %c", &c);
+            c = tolower(c);
 
-        if (c == 'e') {
-            return 3;
-        }
+            if (c == 'd') {
+                char name[FILENAME_MAX];
+                printf("Enter directory name:\n");
+                scanf("%259s", name);
+                char newPath[MAX_PATH_LENGTH];
+                snprintf(newPath, MAX_PATH_LENGTH, PATH_FORMAT, location, name);
+                if (access(newPath, F_OK) == 0) {
+                    printf("The directory %s already exists.", name);
+                } else {
+                    mkdir(newPath);
+                    strcpy(target, name);
+                }
+                return 2;
+            }
 
-        printf("%c is not a valid option.\n", c);
+            if (c == 't') {
+                char name[FILENAME_MAX];
+                while (1) {
+                    printf("Enter TODO name:\n");
+                    scanf("%259s", name);
+                    if (strchr(name, '.') != NULL) {
+                        printf("Name cannot contain dots.\n");
+                        continue;
+                    }
+                    break;
+                }
+                char newPath[MAX_PATH_LENGTH];
+                strcat(name, ".todo");
+                snprintf(newPath, MAX_PATH_LENGTH, PATH_FORMAT, location, name);
+                if (access(newPath, F_OK) == 0) {
+                    printf("The TODO %s already exists.", name);
+                } else {
+                    const FILE *pF = NULL;
+                    pF = fopen(newPath, "w");
+                    if (pF == NULL) {
+                        printf("Error occurred while creating the TODO.");
+                        return -1;
+                    }
+                    strcpy(target, name);
+                }
+                return 2;
+            }
+            if (c == 'e') {
+                return 4;
+            }
+
+            printf("%c is not a valid option.\n", c);
+        }
     }
 }
 

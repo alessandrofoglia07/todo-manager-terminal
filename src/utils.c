@@ -118,11 +118,14 @@ int switchCommand(int command) {
         const int result = cre();
         if (result == 1) {
             printDir();
-            printf("The directory has been successfully created.");
+            printf("New line has been successfully added.");
         } else if (result == 2) {
             printDir();
-            printf("The TODO has been successfully created.");
+            printf("The directory has been successfully created.");
         } else if (result == 3) {
+            printDir();
+            printf("The TODO has been successfully created.");
+        } else if (result == 4) {
             printDir();
         }
     } else if (command == 'd') {
