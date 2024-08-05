@@ -1,4 +1,4 @@
-data/
+data/*
 todo.exe
 .idea/
 .vscode/

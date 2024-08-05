@@ -10,6 +10,9 @@
 #endif
 
 int main() {
+
+    initDataDir();
+
     printDir();
     int command = getch();
     switchCommand(command);

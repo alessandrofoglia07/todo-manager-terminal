@@ -10,6 +10,22 @@
 #include <print.h>
 #include <write.h>
 
+#ifdef _WIN32
+#include <io.h>
+#define F_OK 0
+#define access _access
+#else
+#include <unistd.h>
+#endif
+
+void initDataDir() {
+    const int dataDirExists = access(DEFAULT_DATA_PATH, F_OK) == 0;
+    if (dataDirExists) {
+        return;
+    }
+    mkdir(DEFAULT_DATA_PATH);
+}
+
 void replaceLineInFile(const char *filename, char *oldLine, char *newLine) {
 
     oldLine[strcspn(oldLine, "\n")] = '\0';

@@ -35,8 +35,6 @@ void printLine(const char *line, int *pSize) {
             printf(" - %s", line);
         }
     }
-
-    count++;
 }
 
 void printFileName(const char *entryName, int *pSize) {
@@ -47,8 +45,8 @@ void printFileName(const char *entryName, int *pSize) {
             selectedDir = (char **)realloc(selectedDir, *pSize * sizeof(char *));
         }
 
-        (selectedDir)[count] = (char *)malloc((strlen(entryName) + 1) * sizeof(char));
-        strcpy((selectedDir)[count], entryName);
+        selectedDir[count] = (char *)malloc((strlen(entryName) + 1) * sizeof(char));
+        strcpy(selectedDir[count], entryName);
 
         if (newTarget) {
             strcpy(target, entryName);
@@ -103,7 +101,7 @@ void printDir() {
     if (checkIfTodo(location) == 0) {
         FILE *pF = fopen(location, "r");
         if (pF == NULL) {
-            printf("Error in opening todo at location %s. \n", location);
+            printf(" Error in opening todo at location %s. \n", location);
             return;
         }
         char buffer[BUFFER_SIZE];
@@ -111,6 +109,9 @@ void printDir() {
             printLine(buffer, &size);
         }
         fclose(pF);
+        if (count == 0) {
+            printf(" This TODO is empty. Enter 'h'/'?' to display possible commands.\n");
+        }
         printf("\n\n");
         return;
     }
@@ -123,7 +124,7 @@ void printDir() {
     const HANDLE hFind = FindFirstFile(searchPath, &findFileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
-        printf("Error in opening directory at location %s.\n", location);
+        printf(" Error in opening directory at location %s.\n", location);
         return;
     }
 
@@ -149,7 +150,11 @@ void printDir() {
 #endif
 
     if (count == 0) {
-        printf("This directory is empty. Enter 'h'/'?' to display possible commands.\n");
+        if (strcmp(DEFAULT_DATA_PATH, location)) {
+            printf(" Welcome to the main directory. Enter 'h'/'?' to display possible commands.\n");
+        } else {
+            printf(" This directory is empty. Enter 'h'/'?' to display possible commands.\n");
+        }
     }
 
     printf("\n");

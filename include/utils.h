@@ -7,6 +7,7 @@
 #include <ncurses.h>
 #endif
 
+void initDataDir();
 void replaceLineInFile(const char *filename, char *oldLine, char *newLine);
 int checkIfTodo(const char *str);
 int switchCommand(int command);
