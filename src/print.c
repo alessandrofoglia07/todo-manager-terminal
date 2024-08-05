@@ -110,7 +110,7 @@ void printDir() {
         }
         fclose(pF);
         if (count == 0) {
-            printf(" This TODO is empty. Enter 'h'/'?' to display possible commands.\n");
+            printf(" This TODO is empty. Enter 'h'/'?' to display avaliable commands.\n");
         }
         printf("\n\n");
         return;
@@ -151,9 +151,9 @@ void printDir() {
 
     if (count == 0) {
         if (strcmp(DEFAULT_DATA_PATH, location)) {
-            printf(" Welcome to the main directory. Enter 'h'/'?' to display possible commands.\n");
+            printf(" Welcome to the main directory. Enter 'h'/'?' to display avaliable commands.\n");
         } else {
-            printf(" This directory is empty. Enter 'h'/'?' to display possible commands.\n");
+            printf(" This directory is empty. Enter 'h'/'?' to display avaliable commands.\n");
         }
     }
 
@@ -161,13 +161,22 @@ void printDir() {
 }
 
 void printCommands() {
+    const int isTodo = checkIfTodo(location) == 0;
     printf("** COMMANDS **\n");
-    printf("  'h'/'?' - Display possible commands\n");
-    printf("  'i'/'Arrow Right' - Navigate into directory/todo\n");
-    printf("  'o'/'Arrow Left' - Navigate out of directory/todo\n");
-    printf("  'c' - Create new directory/todo/line\n");
-    printf("  'd' - Delete selected directory/todo/line\n");
-    printf("  'r' - Rename selected directory/todo\n");
-    printf("  'e' - Edit todo line\n");
+    printf("  'h'/'?' - Display available commands\n");
+    if (isTodo) {
+        printf("  'o'/'Arrow Left' - Navigate out of todo\n");
+        printf("  'c' - Create new line\n");
+        printf("  'e' - Edit selected line\n");
+        printf("  'd' - Delete selected line\n");
+    } else {
+        printf("  'i'/'Arrow Right' - Navigate into directory/todo\n");
+        if (strcmp(location, DEFAULT_DATA_PATH) != 0) {
+            printf("  'o'/'Arrow Left' - Navigate out of directory\n");
+        }
+        printf("  'c' - Create new directory/todo\n");
+        printf("  'r' - Rename selected directory/todo\n");
+        printf("  'd' - Delete selected directory/todo\n");
+    }
     printf("  'q' - Quit\n");
 }
