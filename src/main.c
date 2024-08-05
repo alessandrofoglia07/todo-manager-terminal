@@ -15,7 +15,9 @@ int main() {
 
     printDir();
     int command = getch();
-    switchCommand(command);
+    if (switchCommand(command) == 1) {
+        return 0;
+    }
 
     while (true) {
         command = getch();
