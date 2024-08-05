@@ -160,8 +160,8 @@ void printCommands() {
     printf("  'h'/'?' - Display possible commands\n");
     printf("  'i'/'Arrow Right' - Navigate into directory/todo\n");
     printf("  'o'/'Arrow Left' - Navigate out of directory/todo\n");
-    printf("  'c' - Create new directory/todo\n");
-    printf("  'd' - Delete selected directory/todo\n");
+    printf("  'c' - Create new directory/todo/line\n");
+    printf("  'd' - Delete selected directory/todo/line\n");
     printf("  'r' - Rename selected directory/todo\n");
     printf("  'e' - Edit todo line\n");
     printf("  'q' - Quit\n");

@@ -37,10 +37,17 @@ int cre() {
             if (c == 'y') {
                 char line[BUFFER_SIZE];
                 while (1) {
+                    while (getchar() != '\n')
+                        ;
                     printf("Enter new line:\n");
-                    scanf("%1022s", line);
-                    if (strlen(line) > 0) {
-                        break;
+                    if (fgets(line, sizeof(line), stdin) != NULL) {
+                        const size_t len = strlen(line);
+                        if (len > 0 && line[len - 1] == '\n') {
+                            line[len - 1] = '\0';
+                        }
+                        if (strlen(line) > 0) {
+                            break;
+                        }
                     }
                 }
                 FILE *pF = fopen(location, "a");
@@ -194,42 +201,86 @@ int removeDirectory(const char *path) {
 
 int del() {
     char c;
-    const int isTodo = checkIfTodo(target);
-    while (1) {
-        if (isTodo == 0) {
-            printf("\n%s\nDo you really want to delete this TODO? (y/N) ", target);
-        } else {
-            printf("\n%s\nDo you really want to delete this directory? (y/N) ", target);
-        }
+    const int inTodo = checkIfTodo(location) == 0;
+    if (inTodo) {
+        while (1) {
+            printf("Do you really want to delete this line? (y/N) ");
+            scanf(" %c", &c);
+            c = tolower(c);
 
-        scanf(" %c", &c);
-        c = tolower(c);
-
-        if (c == 'y') {
-            char fullPath[MAX_PATH_LENGTH];
-            snprintf(fullPath, MAX_PATH_LENGTH, PATH_FORMAT, location, target);
-
-            if (isTodo == 0) {
-                if (remove(fullPath) != 0) {
-                    perror("Error removing TODO");
+            if (c == 'y') {
+                FILE *pF = fopen(location, "r");
+                FILE *temp = fopen("tempfile1.txt", "w+");
+                if (pF == NULL) {
+                    printf("Error in opening todo at location %s. \n", location);
                     return -1;
                 }
-            } else {
-                if (removeDirectory(fullPath) != 0) {
-                    perror("Error removing directory");
+                char buf[BUFFER_SIZE];
+                while (fgets(buf, BUFFER_SIZE, pF) != NULL) {
+                    if (strcmp(buf, target) != 0) {
+                        fputs(buf, temp);
+                    }
+                }
+                rewind(temp);
+                fclose(pF);
+                pF = fopen(location, "w");
+                if (pF == NULL) {
+                    printf("Error in opening todo at location %s. \n", location);
                     return -1;
                 }
+                while ((c = fgetc(temp)) != EOF) {
+                    fputc(c, pF);
+                }
+                fclose(pF);
+                fclose(temp);
+                remove("tempfile1.txt");
+                newTarget = true;
+                return 1;
+            }
+            if (c == 'n') {
+                return 2;
             }
 
-            newTarget = true;
-            return 1;
+            printf("%c is not a valid option.\n", c);
         }
+    } else {
+        const int isTodo = checkIfTodo(target);
+        while (1) {
+            if (isTodo == 0) {
+                printf("\n%s\nDo you really want to delete this TODO? (y/N) ", target);
+            } else {
+                printf("\n%s\nDo you really want to delete this directory? (y/N) ", target);
+            }
 
-        if (c == 'n') {
-            return 2;
+            scanf(" %c", &c);
+            c = tolower(c);
+
+            if (c == 'y') {
+                char fullPath[MAX_PATH_LENGTH];
+                snprintf(fullPath, MAX_PATH_LENGTH, PATH_FORMAT, location, target);
+
+                if (isTodo == 0) {
+                    if (remove(fullPath) != 0) {
+                        perror("Error removing TODO");
+                        return -1;
+                    }
+                } else {
+                    if (removeDirectory(fullPath) != 0) {
+                        perror("Error removing directory");
+                        return -1;
+                    }
+                }
+
+                newTarget = true;
+                return 1;
+            }
+
+            if (c == 'n') {
+                return 2;
+            }
+
+            printf("%c is not a valid option.\n", c);
         }
-
-        printf("%c is not a valid option.\n", c);
     }
 }
 
