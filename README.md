@@ -13,17 +13,17 @@
 
 ## Key Features
 
-* Command Line Interface: Manage your TODOs directly from the terminal with a simple and intuitive command line interface.
+* 🖥️ Command Line Interface: Manage your TODOs directly from the terminal with a simple and intuitive command line interface.
 
-* Directory Navigation: Easily navigate through directories and TODO files using keyboard commands.
+* 📂 Directory Navigation: Easily navigate through directories and TODO files using keyboard commands.
 
-* Create, Edit, and Delete: Quickly create, edit, and delete TODO items and directories.
+* ✏️ Create, Edit, and Delete: Quickly create, edit, and delete TODO items and directories.
 
-* Cross-Platform Compatibility: Works on both Windows and Unix-based systems.
+* 🌐 Cross-Platform Compatibility: Works on both Windows and Unix-based systems.
 
-* Real-time Updates: Changes are reflected in real-time, ensuring your TODO list is always up-to-date.
+* 🔄 Real-time Updates: Changes are reflected in real-time, ensuring your TODO list is always up-to-date.
 
-* Lightweight and Fast: Minimalistic design ensures the application is lightweight and fast, even with large TODO lists.
+* ⚡ Lightweight and Fast: Minimalistic design ensures the application is lightweight and fast, even with large TODO lists.
 
 ## How To Use
 
