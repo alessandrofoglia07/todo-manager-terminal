@@ -5,6 +5,8 @@
 
 <h4 align="center">A minimal TODO manager in the terminal written in C.</h4>
 
+<img src="https://cloud-l70eklxva-hack-club-bot.vercel.app/0image.png" alt="Terminal TODO Manager" width="600">
+
 <p align="center">
   <a href="#key-features">Key Features</a> •
   <a href="#how-to-use">How To Use</a> •
